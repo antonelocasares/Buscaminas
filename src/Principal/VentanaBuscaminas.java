@@ -4,30 +4,59 @@ package Principal;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.Random;
 
 
 /**
  *
- * @author Jorge Cisneros
- */
+ * @author Antonio Casares
+ */ 
 public class VentanaBuscaminas extends javax.swing.JFrame {
 
     //primero resuelvo la vista para que me pinte
     //una pantalla con botones
     int filas = 20;
     int columnas = 30;
-    int numMinas = 19;
+    int numMinas = 59;
     
     Boton [][] arrayBotones = new Boton[filas][columnas];
-       
+
     private void ponUnaBomba(){
         Random r = new Random();
        int f = r.nextInt(filas);
-       int c = r.nextInt(columnas);
+       int c = r.nextInt(columnas);  
        
        arrayBotones[f][c].bomba = 1;
        arrayBotones[f][c].setText("B");
+    }
+    
+    //cuentaminas realiza un paso previo que consiste en contar para cada celda
+    //el numero de minas que hay alrededor
+    private void cuentaMinas(){
+        int minas = 0;
+        
+        for (int i=0; i< filas; i++){
+            for (int j=0; j< columnas; j++){
+                //uso un bucle anidado para recorrer
+                //las 8 casillas que hay alrededor
+                for (int k= -1; k < 2; k++){
+                    for (int m= -1; m<2; m++){
+                        if ((i+k >=0) && (j+m >= 0) && (i+k < filas) && (j+m < columnas)){
+                            minas = minas + arrayBotones[i+k][j+m].bomba;
+                        }
+                    }
+                }
+                arrayBotones[i][j].numeroMinasAlrededor = minas;
+                minas = 0;
+                if ((arrayBotones[i][j].numeroMinasAlrededor > 0) &&
+                    (arrayBotones[i][j].bomba == 0)){
+                    arrayBotones[i][j].setText(String.valueOf(arrayBotones[i][j].numeroMinasAlrededor));
+                }
+            }
+        }
+        
+        
     }
     
     /**
@@ -59,6 +88,7 @@ public class VentanaBuscaminas extends javax.swing.JFrame {
         for (int i=0; i<numMinas; i++){
             ponUnaBomba();
         }
+        cuentaMinas();
     }
 
     //este método es llamado cada vez que hacemos clic en un botón
@@ -68,6 +98,36 @@ public class VentanaBuscaminas extends javax.swing.JFrame {
             miBoton.setText("?");
         }
         else{
+            //si es una bomba --> explota y se acaba la partida
+            
+            //declaro un arraylist para ir guardando la lista de botones
+            //que tengo que verificar
+            ArrayList <Boton> listaDeCasillasAMirar = new ArrayList();
+            //añado el botón que ha sido pulsado
+            listaDeCasillasAMirar.add(miBoton);
+            
+            while (listaDeCasillasAMirar.size() > 0){
+                Boton b = listaDeCasillasAMirar.get(0);
+                for (int k=-1; k<2; k++){
+                    for (int m=-1; m<2; m++){
+                        if ((b.x + k >= 0)&&
+                            (b.y + m >= 0)&&
+                            (b.x + k < filas) &&
+                            (b.y + m < columnas)){
+                            //si el boton de esa posición está habilitado 
+                            //es que no lo he chequeado todavia
+                            if (arrayBotones[b.x + k][b.y + m].isEnabled()){
+                               if (arrayBotones[b.x + k][b.y + m].numeroMinasAlrededor == 0){
+                                   arrayBotones[b.x + k][b.y + m].setEnabled(false);
+                                   listaDeCasillasAMirar.add(arrayBotones[b.x + k][b.y + m]);
+                               } 
+                            }
+                        }    
+                    }
+                }
+                listaDeCasillasAMirar.remove(b);
+            }
+            //si no, verificamos la casilla 
             miBoton.setText("0");
         }
         
@@ -136,3 +196,7 @@ public class VentanaBuscaminas extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
 }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+
